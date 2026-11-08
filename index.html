@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sunday Brunch Cards</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#f5eee4;color:#49372e;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;padding:22px}
+main{width:100%;max-width:420px;text-align:center}
+h1{font-size:32px;margin:8px 0}
+.sub{font:13px Arial,sans-serif;letter-spacing:2px;color:#987c67;margin-bottom:25px}
+.card{background:#fffaf3;padding:12px;border-radius:18px;box-shadow:0 8px 28px #5c453322;min-height:280px;display:flex;align-items:center;justify-content:center}
+.card img{width:100%;height:auto;max-height:520px;object-fit:contain;border-radius:10px}
+.placeholder{padding:65px 15px;color:#9b806b;font-size:18px}
+button{margin-top:22px;background:#654b3b;color:white;border:0;border-radius:30px;padding:16px 30px;font-size:16px;cursor:pointer;width:100%}
+button:disabled{opacity:.55}
+#message{font:14px Arial,sans-serif;min-height:22px;margin-top:14px;color:#806b5c}
+footer{font:11px Arial,sans-serif;letter-spacing:2px;color:#a58e7b;margin-top:28px}
+</style>
+</head>
+<body>
+<main>
+<div class="sub">ENGLISH CLUB PRESENTS</div>
+<h1>Sunday Brunch</h1>
+<div class="sub">A LITTLE FUN • A LITTLE ENGLISH</div>
+<div class="card" id="card">
+<div class="placeholder">Your brunch card is waiting...</div>
+</div>
+<button id="draw">Draw a Card ✨</button>
+<div id="message">Tap to discover your challenge!</div>
+<footer>GOOD FOOD · GOOD FRIENDS · GOOD ENGLISH</footer>
+</main>
+<script>
+const URL="https://wgenbsndkcuwylklxmbz.supabase.co";
+const KEY="sb_publishable_AgQXewb6Huc-VzFrlSOBmA_rIP9GIq9";
+
+const button=document.getElementById("draw");
+const card=document.getElementById("card");
+const message=document.getElementById("message");
+
+button.addEventListener("click",async()=>{
+button.disabled=true;
+button.textContent="Drawing...";
+message.textContent="Picking your card...";
+
+try{
+const response=await fetch(URL+"/rest/v1/rpc/draw_brunch_card",{
+method:"POST",
+headers:{
+"apikey":KEY,
+"Authorization":"Bearer "+KEY,
+"Content-Type":"application/json"
+},
+body:"{}"
+});
+
+if(!response.ok) throw new Error(await response.text());
+
+const data=await response.json();
+
+if(!data || data.length===0){
+card.innerHTML='<div class="placeholder">All cards have been drawn! 🎉</div>';
+message.textContent="The brunch deck is complete!";
+button.textContent="Deck completed";
+return;
+}
+
+const path=data[0].image_path;
+const imageURL=URL+"/storage/v1/object/public/brunch-cards/"+path.split("/").map(encodeURIComponent).join("/");
+
+card.innerHTML="";
+const img=document.createElement("img");
+img.src=imageURL;
+img.alt="Brunch challenge card";
+img.onerror=()=>{message.textContent="Card image could not be loaded.";};
+card.appendChild(img);
+message.textContent="Your turn! Enjoy the challenge ☕";
+button.textContent="Draw another card ✨";
+}catch(error){
+message.textContent="Something went wrong. Please try again.";
+button.textContent="Try again";
+console.error(error);
+}finally{
+button.disabled=false;
+}
+});
+</script>
+</body>
+</html>
